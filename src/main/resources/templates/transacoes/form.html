@@ -9,7 +9,7 @@
 <div class="container mt-5">
     <h2 class="mb-4">Nova Transação</h2>
 
-    <form th:action="@{/contas/{id}/transacoes/criar}" th:object="${transacaoForm}" method="post">
+    <form th:action="@{/contas/{id}/transacoes}" th:object="${transacaoForm}" method="post">
 
         <!-- Campo oculto com o ID da conta -->
         <input type="hidden" name="contaId" th:value="${contaId}" />

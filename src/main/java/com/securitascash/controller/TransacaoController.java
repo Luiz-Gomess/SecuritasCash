@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 
+import com.securitascash.dto.comentario.ComentarioForm;
 import com.securitascash.dto.transacao.TransacaoForm;
 import com.securitascash.dto.usuario.UsuarioSessao;
+import com.securitascash.model.Comentario;
 import com.securitascash.model.Transacao;
 import com.securitascash.model.conta.Conta;
 import com.securitascash.service.conta.ContaService;
@@ -39,6 +42,8 @@ public class TransacaoController {
     @Autowired
     ContaService contaService;
 
+    //TODO: Adicionar os outros métodos de comentário: UPDATE E DELETE
+
     @GetMapping
     public String listarTransacoesPorConta(@PathVariable Long id, HttpSession session, Model model) throws Exception {
 
@@ -53,7 +58,39 @@ public class TransacaoController {
         List<Transacao> transacoes = transacaoService.listarTransacoes(id);
         model.addAttribute("transacoes", transacoes);
         model.addAttribute("conta", conta);
+        model.addAttribute("contaId", id);
         return "transacoes";
+    }
+
+
+    @GetMapping("/{transacaoId}/comentarios")
+    public ModelAndView listarComentarios (@PathVariable Long transacaoId, ModelAndView mav, @PathVariable("id") Long contaId) {
+
+        Transacao transacao = transacaoService.buscarTransacaoPorId(transacaoId);
+        
+        mav.setViewName("transacoes/comentarios");
+
+        mav.addObject("comentarios", transacao.getComentarios());
+        mav.addObject("contaId", contaId);
+        mav.addObject("transacao", transacao);
+        mav.addObject("comentarioForm", new ComentarioForm());
+        
+        return mav;
+    }
+
+    @PostMapping("/{transacaoId}/comentarios")
+    public String salvarComentario(@ModelAttribute ComentarioForm comentarioForm,
+                                @RequestParam Long transacaoId, @PathVariable("id") Long contaId) {
+
+        Transacao transacao = transacaoService.buscarTransacaoPorId(transacaoId);
+
+        Comentario comentario = new Comentario();
+        comentario.setTexto(comentarioForm.getTexto());
+        comentario.setTransacao(transacao);
+
+        transacaoService.adicionarComentario(transacao.getId(), comentario);
+
+        return "redirect:/contas/" + contaId + "/transacoes/" + transacaoId + "/comentarios" ;
     }
 
     @GetMapping("criar")
@@ -63,7 +100,7 @@ public class TransacaoController {
         return "transacoes/form";
     }
 
-    @PostMapping("/criar")
+    @PostMapping
     public String salvarTransacao(@ModelAttribute TransacaoForm transacaoForm,
                                 @RequestParam("contaId") Long contaId) {
 
